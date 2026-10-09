@@ -30,8 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  wajiha_game_core:
-    path: packages/wajiha_game_core
+  audioplayers: ^6.1.0
+  shared_preferences: ^2.3.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -60,9 +60,24 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/audio/click.wav
+    - assets/audio/place.wav
+    - assets/audio/invalid.wav
+    - assets/audio/swap.wav
+    - assets/audio/start.wav
+    - assets/audio/win.wav
+    - assets/audio/lose.wav
+    - assets/audio/music_menu.wav
+    - assets/audio/music_game.wav
+
+  fonts:
+    - family: EBGaramond
+      fonts:
+        - asset: assets/fonts/EBGaramond.ttf
+    - family: Newsreader
+      fonts:
+        - asset: assets/fonts/Newsreader.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
