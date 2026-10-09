@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -620,30 +621,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 size: 30, player: p, glaze: theme.glaze(p)),
                             const SizedBox(width: 10),
                             Expanded(
-                              child: TextFormField(
-                                key: ValueKey('name$p'),
-                                initialValue: set.nameOf(p),
-                                maxLength: 16,
-                                style: HxTheme.body
-                                    .copyWith(fontWeight: FontWeight.w700),
-                                decoration: InputDecoration(
-                                  counterText: '',
-                                  isDense: true,
-                                  contentPadding:
-                                      const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 10),
-                                  filled: true,
-                                  fillColor: HxTheme.cream
-                                      .withValues(alpha: 0.5),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                ),
-                                onFieldSubmitted: (v) async {
-                                  await set.setPlayerName(p, v);
-                                  audio.click();
-                                  setState(() {});
-                                },
+                              child: _NameField(
+                                player: p,
+                                onCommitted: () => setState(() {}),
                               ),
                             ),
                           ],
@@ -776,6 +756,88 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Player rename field for the settings screen.
+///
+/// Saves as you type (staged in memory immediately, persisted debounced) and
+/// commits the current text on focus loss — not just keyboard-done — so no
+/// typed name is ever lost.
+class _NameField extends StatefulWidget {
+  final int player;
+  final VoidCallback onCommitted;
+  const _NameField({required this.player, required this.onCommitted});
+
+  @override
+  State<_NameField> createState() => _NameFieldState();
+}
+
+class _NameFieldState extends State<_NameField> {
+  static const _saveDebounce = Duration(milliseconds: 600);
+  late final TextEditingController _c;
+  late final FocusNode _focus;
+  Timer? _debounce;
+
+  HxSettings get _set => HxSettings.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = TextEditingController(text: _set.nameOf(widget.player));
+    _focus = FocusNode();
+    // Commit whatever is in the field when it loses focus.
+    _focus.addListener(() {
+      if (!_focus.hasFocus) _commit();
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _focus.dispose();
+    _c.dispose();
+    super.dispose();
+  }
+
+  /// Persist the trimmed field text (defaults if blank) and refresh the UI.
+  Future<void> _commit() async {
+    _debounce?.cancel();
+    await _set.setPlayerName(widget.player, _c.text);
+    if (mounted) widget.onCommitted();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _c,
+      focusNode: _focus,
+      maxLength: 16,
+      style: HxTheme.body.copyWith(fontWeight: FontWeight.w700),
+      decoration: InputDecoration(
+        counterText: '',
+        isDense: true,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        filled: true,
+        fillColor: HxTheme.cream.withValues(alpha: 0.5),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      // Save-on-keystroke: stage in memory at once, persist debounced.
+      onChanged: (v) {
+        _set.stagePlayerName(widget.player, v);
+        _debounce?.cancel();
+        _debounce = Timer(_saveDebounce, () {
+          _set.setPlayerName(widget.player, _c.text);
+        });
+      },
+      onSubmitted: (_) async {
+        HxAudio.instance.click();
+        await _commit();
+      },
     );
   }
 }

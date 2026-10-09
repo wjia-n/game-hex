@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'hex_themes.dart';
@@ -45,6 +47,37 @@ class HxSettings {
 
   bool _ready = false;
 
+  /// legacy unordered StringList key — one-time migration source only
+  static const _kNamesLegacy = 'hx_names';
+
+  /// Order-safe player-name storage: a single JSON string. Android's
+  /// SharedPreferences stores StringLists as an unordered StringSet, so the
+  /// old key scrambled name order on every app restart. Never use a
+  /// StringList for ordered data on Android.
+  static const _kNamesJson = 'hex_player_names_json';
+
+  static const defaultNames = ['Terracotta', 'Indigo'];
+
+  /// Encode the 2 player names as one JSON string (order-preserving).
+  static String encodePlayerNames(List<String> names) => jsonEncode(names);
+
+  static String _cleanName(int i, Object? v) {
+    final s = v is String ? v.trim() : '';
+    return s.isEmpty ? defaultNames[i] : s;
+  }
+
+  /// Decode persisted names; falls back to defaults on missing/corrupt data.
+  static List<String> decodePlayerNames(String? raw) {
+    if (raw == null) return List.of(defaultNames);
+    try {
+      final d = jsonDecode(raw);
+      if (d is List && d.length == 2) {
+        return [for (int i = 0; i < 2; i++) _cleanName(i, d[i])];
+      }
+    } catch (_) {}
+    return List.of(defaultNames);
+  }
+
   String nameOf(int player) =>
       playerNames[player.clamp(0, 1)].trim().isEmpty
           ? (player == 0 ? 'Terracotta' : 'Indigo')
@@ -58,12 +91,17 @@ class HxSettings {
     difficulty = (p.getInt('hx_difficulty') ?? 1).clamp(0, 2);
     humanColor = (p.getInt('hx_human_color') ?? 0).clamp(0, 1);
     pieRule = p.getBool('hx_pie_rule') ?? true;
-    final names = p.getStringList('hx_names');
-    if (names != null && names.length == 2) {
-      playerNames = [
-        names[0].trim().isEmpty ? 'Terracotta' : names[0].trim(),
-        names[1].trim().isEmpty ? 'Indigo' : names[1].trim(),
-      ];
+    // Player names: prefer the order-safe JSON key. Fall back to the legacy
+    // StringList key once (one-time migration); it may already be scrambled
+    // on Android, which is exactly the bug this replaces.
+    final namesRaw = p.getString(_kNamesJson);
+    if (namesRaw != null) {
+      playerNames = decodePlayerNames(namesRaw);
+    } else {
+      final legacy = p.getStringList(_kNamesLegacy);
+      playerNames = (legacy != null && legacy.length == 2)
+          ? [for (int i = 0; i < 2; i++) _cleanName(i, legacy[i])]
+          : List.of(defaultNames);
     }
     themeId = p.getString('hx_theme_id') ?? 'classic';
     tileStyle =
@@ -115,11 +153,25 @@ class HxSettings {
   }
 
   Future<void> setPlayerName(int player, String name) async {
-    playerNames[player.clamp(0, 1)] = name.trim().isEmpty
-        ? (player == 0 ? 'Terracotta' : 'Indigo')
+    final i = player.clamp(0, 1);
+    playerNames[i] = name.trim().isEmpty
+        ? (i == 0 ? 'Terracotta' : 'Indigo')
         : name.trim();
-    (await SharedPreferences.getInstance())
-        .setStringList('hx_names', playerNames);
+    await _savePlayerNames();
+  }
+
+  /// In-memory-only name update while typing (no disk write); the rename
+  /// field commits via [setPlayerName] on focus loss / keyboard-done.
+  void stagePlayerName(int player, String name) {
+    playerNames[player.clamp(0, 1)] = name;
+  }
+
+  /// Persist the two names as one order-preserving JSON string and drop the
+  /// legacy unordered StringList key for good.
+  Future<void> _savePlayerNames() async {
+    final p = await SharedPreferences.getInstance();
+    await p.setString(_kNamesJson, encodePlayerNames(playerNames));
+    await p.remove(_kNamesLegacy);
   }
 
   Future<void> setTheme(String id) async {
