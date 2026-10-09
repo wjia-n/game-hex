@@ -336,20 +336,24 @@ class _GrainPainter extends CustomPainter {
 class GlazedHexIcon extends StatelessWidget {
   final double size;
   final int player;
-  const GlazedHexIcon({super.key, required this.size, required this.player});
+  final (Color, Color, Color)? glaze; // optional themed glaze override
+  const GlazedHexIcon(
+      {super.key, required this.size, required this.player, this.glaze});
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       size: Size(size, size),
-      painter: _HexIconPainter(player: player),
+      painter: _HexIconPainter(
+          player: player, glaze: glaze ?? HxTheme.glaze(player)),
     );
   }
 }
 
 class _HexIconPainter extends CustomPainter {
   final int player;
-  _HexIconPainter({required this.player});
+  final (Color, Color, Color) glaze;
+  _HexIconPainter({required this.player, required this.glaze});
 
   Path _hexPath(Offset c, double r) {
     final p = Path();
@@ -370,7 +374,7 @@ class _HexIconPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final c = Offset(size.width / 2, size.height / 2);
     final r = size.width / 2;
-    final (hi, mid, lo) = HxTheme.glaze(player);
+    final (hi, mid, lo) = glaze;
     // contact shadow
     canvas.save();
     canvas.translate(2, 4);
@@ -406,5 +410,6 @@ class _HexIconPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _HexIconPainter old) => old.player != player;
+  bool shouldRepaint(covariant _HexIconPainter old) =>
+      old.player != player || old.glaze != glaze;
 }

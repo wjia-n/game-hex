@@ -1,16 +1,22 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hex/engine.dart';
 
+HexEngine _engine({int size = 11, bool pie = true}) {
+  final e = HexEngine(size: size, pieRuleEnabled: pie);
+  addTearDown(e.dispose);
+  return e;
+}
+
 void main() {
   test('opening move offers swap', () {
-    final e = HexEngine(size: 11);
+    final e = _engine();
     expect(e.play(5, 5), isTrue);
     expect(e.canSwap, isTrue);
     expect(e.turn, 1);
   });
 
   test('swap accepted flips colors and passes turn', () {
-    final e = HexEngine(size: 11);
+    final e = _engine();
     e.play(5, 5);
     expect(e.swap(), isTrue);
     expect(e.board[5][5], 0); // tile kept, now belongs to (new) terracotta
@@ -21,7 +27,7 @@ void main() {
   });
 
   test('swap declined expires forever', () {
-    final e = HexEngine(size: 11);
+    final e = _engine();
     e.play(5, 5);
     e.declineSwap();
     expect(e.canSwap, isFalse);
@@ -31,7 +37,7 @@ void main() {
   });
 
   test('illegal overwrite rejected, turn unchanged', () {
-    final e = HexEngine(size: 11);
+    final e = _engine();
     e.play(5, 5);
     e.declineSwap();
     expect(e.play(5, 5), isFalse);
@@ -40,7 +46,7 @@ void main() {
   });
 
   test('terracotta vertical win on 7x7', () {
-    final e = HexEngine(size: 7, pieRuleEnabled: false);
+    final e = _engine(size: 7, pie: false);
     // Terracotta column q=3 from r=0..6, indigo plays elsewhere.
     for (int r = 0; r < 7; r++) {
       expect(e.play(3, r), isTrue); // terracotta
@@ -53,7 +59,7 @@ void main() {
   });
 
   test('indigo horizontal win', () {
-    final e = HexEngine(size: 7, pieRuleEnabled: false);
+    final e = _engine(size: 7, pie: false);
     for (int q = 0; q < 7; q++) {
       expect(e.play(q, 0), isTrue); // terracotta filler (row can't connect)
       expect(e.play(q, 3), isTrue); // indigo row r=3
@@ -63,13 +69,13 @@ void main() {
   });
 
   test('corner tile alone does not win', () {
-    final e = HexEngine(size: 7, pieRuleEnabled: false);
+    final e = _engine(size: 7, pie: false);
     e.play(0, 0); // corner touches both terracotta edges but isolated
     expect(e.over, isFalse);
   });
 
   test('vertex-touching tiles do not connect', () {
-    final e = HexEngine(size: 7, pieRuleEnabled: false);
+    final e = _engine(size: 7, pie: false);
     // (0,0) and (1,1) touch at a vertex only, not a side.
     e.board[0][0] = 0;
     e.board[1][1] = 0;
@@ -77,7 +83,7 @@ void main() {
   });
 
   test('AI takes immediate win (steady)', () {
-    final e = HexEngine(size: 7, pieRuleEnabled: false);
+    final e = _engine(size: 7, pie: false);
     final ai = HexAI();
     // Indigo (AI) one move from completing row r=3.
     for (int q = 0; q < 6; q++) {
@@ -93,7 +99,7 @@ void main() {
   });
 
   test('AI blocks immediate loss (steady)', () {
-    final e = HexEngine(size: 7, pieRuleEnabled: false);
+    final e = _engine(size: 7, pie: false);
     final ai = HexAI();
     // Terracotta column hugging the left edge, one cell short: the ONLY
     // immediate winning cell is (0,6).
@@ -117,7 +123,7 @@ void main() {
   });
 
   test('undo in vs-AI removes two plies, respects floor', () {
-    final e = HexEngine(size: 7, pieRuleEnabled: false);
+    final e = _engine(size: 7, pie: false);
     e.play(3, 3); // H
     e.play(0, 0); // A
     e.play(3, 4); // H
@@ -125,11 +131,11 @@ void main() {
     expect(e.undo(2), 2);
     expect(e.board[0][0], -1);
     expect(e.board[3][4], -1);
-    expect(e.turn, 1); // human (terracotta) to move... turn was 1 (AI); after removing 2 -> 1? 
+    expect(e.turn, 1); // human (terracotta) to move... turn was 1 (AI); after removing 2 -> 1?
   });
 
   test('resignation gives opponent the win', () {
-    final e = HexEngine(size: 7, pieRuleEnabled: false);
+    final e = _engine(size: 7, pie: false);
     e.play(3, 3);
     e.resign(0);
     expect(e.over, isTrue);
@@ -138,12 +144,13 @@ void main() {
   });
 
   test('JSON round-trip preserves exact state (pause/kill-restore)', () {
-    final e = HexEngine(size: 9);
+    final e = _engine(size: 9);
     e.play(4, 4);
     e.declineSwap();
     e.play(0, 1);
     e.play(4, 5);
     final r = HexEngine.fromJson(e.toJson());
+    addTearDown(r.dispose);
     expect(r.size, 9);
     expect(r.turn, e.turn);
     expect(r.moveCount, 3);
@@ -154,7 +161,7 @@ void main() {
   });
 
   test('AI swap takes strong central opening', () {
-    final e = HexEngine(size: 11);
+    final e = _engine();
     final ai = HexAI();
     e.play(5, 5);
     expect(ai.shouldSwap(e, [5, 5]), isTrue);
