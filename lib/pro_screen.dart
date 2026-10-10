@@ -20,8 +20,7 @@ class _ProScreenState extends State<ProScreen> {
   @override
   void initState() {
     super.initState();
-    widget.store.proPurchased.addListener(_onPro);
-    widget.store.lastThanks.addListener(_onThanks);
+        widget.store.lastThanks.addListener(_onThanks);
   }
 
   void _onPro() {
@@ -58,8 +57,7 @@ class _ProScreenState extends State<ProScreen> {
 
   @override
   void dispose() {
-    widget.store.proPurchased.removeListener(_onPro);
-    widget.store.lastThanks.removeListener(_onThanks);
+        widget.store.lastThanks.removeListener(_onThanks);
     super.dispose();
   }
 
