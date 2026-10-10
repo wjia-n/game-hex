@@ -34,7 +34,7 @@ class HxSettings {
   Map<String, int> customColors = {};
 
   /// Pro unlock (from the real purchase; also flippable by the store).
-  bool isPro = false;
+  bool isPro = true; // everything unlocked
 
   /// Audio toggles + volume (applied to HxAudio at launch).
   bool musicOn = true;
@@ -106,7 +106,7 @@ class HxSettings {
     themeId = p.getString('hx_theme_id') ?? 'classic';
     tileStyle =
         (p.getInt('hx_tile_style') ?? 0).clamp(0, HxTileStyles.names.length - 1);
-    isPro = p.getBool('hx_is_pro') ?? false;
+    isPro = true; // everything unlocked
     musicOn = p.getBool('hx_music_on') ?? true;
     sfxOn = p.getBool('hx_sfx_on') ?? true;
     volume = (p.getDouble('hx_volume') ?? 0.8).clamp(0.0, 1.0);
@@ -192,7 +192,7 @@ class HxSettings {
     (await SharedPreferences.getInstance()).setInt('hx_custom_$key', argb);
   }
 
-  Future<void> setPro(bool v) async {    isPro = v;
+  Future<void> setPro(bool v) async {    isPro = true; // everything unlocked
     (await SharedPreferences.getInstance()).setBool('hx_is_pro', v);
     _enforceFreeLimits();
     if (!isPro) {
