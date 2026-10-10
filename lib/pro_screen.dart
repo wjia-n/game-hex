@@ -23,22 +23,6 @@ class _ProScreenState extends State<ProScreen> {
         widget.store.lastThanks.addListener(_onThanks);
   }
 
-  void _onPro() {
-    if (widget.store.proPurchased.value && mounted) {
-      HxSettings.instance.setPro(true);
-      HxAudio.instance.win();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('PRO unlocked — enjoy everything!',
-              style: HxTheme.body.copyWith(color: HxTheme.cream)),
-          backgroundColor: HxTheme.walnut,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      widget.store.proPurchased.value = false;
-      setState(() {});
-    }
-  }
 
   void _onThanks() {
     final msg = widget.store.lastThanks.value;
