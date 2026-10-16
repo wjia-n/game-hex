@@ -11,6 +11,7 @@ import 'iap_service.dart';
 import 'pro_screen.dart';
 import 'settings.dart';
 import 'splash_screen.dart';
+import 'transfer/transfer_ui.dart';
 
 /// Shared store for the whole app (initialized once at launch).
 final StoreService hexStore = StoreService();
@@ -534,6 +535,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
             children: [
+              TransferSaveTile(gameSlug: 'hex'),
               Row(
                 children: [
                   TokenButton(
