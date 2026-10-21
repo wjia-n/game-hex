@@ -71,3 +71,12 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+// 16 KB page-size compliance (Play Console error): ML Kit barcode-scanning
+// 17.2.0 (via mobile_scanner 5.2.3) ships 4 KB-aligned native libs; 17.3.0 is
+// 16 KB aligned on 64-bit ABIs. Forced here so no Dart API migration is needed.
+configurations.all {
+    resolutionStrategy {
+        force("com.google.mlkit:barcode-scanning:17.3.0")
+    }
+}
