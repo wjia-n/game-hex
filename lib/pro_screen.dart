@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
@@ -47,6 +48,46 @@ class _ProScreenState extends State<ProScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // iOS-only Gold Star screen. Android build below is untouched.
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Gold Star'), centerTitle: true),
+        body: SafeArea(
+          child: ValueListenableBuilder<bool>(
+            valueListenable: widget.store.starOwned,
+            builder: (_, owned, child) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('\u2b50', style: TextStyle(fontSize: 64)),
+                    const SizedBox(height: 12),
+                    Text(owned ? 'Gold Star unlocked!' : 'Gold Star',
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    const Text('The game stays fully unlocked. The Gold Star is a cosmetic badge of support.',
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 20),
+                    if (owned)
+                      const Text('\u2b50 Gold Star badge', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))
+                    else if (widget.store.starProduct != null)
+                      ElevatedButton(
+                        onPressed: () => widget.store.buyStar(widget.store.starProduct!),
+                        child: Text('\u2b50 Gold Star — ${widget.store.starProduct!.price}'),
+                      )
+                    else
+                      Text(widget.store.error ?? 'Loading…'),
+                    const SizedBox(height: 12),
+                    TextButton(onPressed: () => widget.store.restore(), child: const Text('Restore purchase')),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     final set = HxSettings.instance;
     final store = widget.store;
     return Scaffold(

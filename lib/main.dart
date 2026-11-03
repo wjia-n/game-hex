@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'audio.dart';
 import 'custom_theme_screen.dart';
@@ -190,7 +191,7 @@ class _MainMenuState extends State<MainMenu> {
                       label: 'Themes', onTap: () => _open(const ThemesScreen())),
                   const SizedBox(height: 14),
                   ClayButton(
-                      label: set.isPro ? 'Hex PRO ✦' : 'Hex PRO',
+                      label: defaultTargetPlatform == TargetPlatform.iOS ? '⭐ Gold Star' : (set.isPro ? 'Hex PRO ✦' : 'Hex PRO'),
                       glazeColor: HxTheme.terracotta,
                       onTap: () => _open(ProScreen(store: hexStore))),
                   const SizedBox(height: 14),
