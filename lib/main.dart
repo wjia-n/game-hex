@@ -284,11 +284,13 @@ class _ThemesScreenState extends State<ThemesScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('PRO only',
+              Text(defaultTargetPlatform == TargetPlatform.iOS ? 'Included for everyone' : 'PRO only',
                   style: HxTheme.plaqueTitle.copyWith(fontSize: 20)),
               const SizedBox(height: 8),
               Text(
-                '$what beyond the free set need Hex PRO — one purchase, yours forever.',
+                defaultTargetPlatform == TargetPlatform.iOS
+                    ? '$what beyond the free set are included for everyone.'
+                    : '$what beyond the free set need Hex PRO — one purchase, yours forever.',
                 style: HxTheme.body,
                 textAlign: TextAlign.center,
               ),
@@ -665,7 +667,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                      'Master AI needs Hex PRO — see the PRO screen.',
+                                      defaultTargetPlatform == TargetPlatform.iOS
+                                          ? 'Master AI is free for everyone.'
+                                          : 'Master AI needs Hex PRO — see the PRO screen.',
                                       style: HxTheme.body.copyWith(
                                           color: HxTheme.cream)),
                                   backgroundColor: HxTheme.walnut,
