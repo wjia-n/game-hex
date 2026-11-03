@@ -294,7 +294,7 @@ class _ThemesScreenState extends State<ThemesScreen> {
               ),
               const SizedBox(height: 16),
               ClayButton(
-                label: 'See Hex PRO',
+                label: defaultTargetPlatform == TargetPlatform.iOS ? '⭐ Gold Star' : 'See Hex PRO',
                 glazeColor: HxTheme.terracotta,
                 onTap: () {
                   Navigator.of(ctx).pop();
